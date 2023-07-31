@@ -33,7 +33,7 @@ jobs:
         run: unzip idea_sources_public.tab.zip
         
       - name: run data getter
-        run: Rscript -e 'd <- data.frame(file = readLines("idea_sources_public.tab")); arrow::write_parque(d, "idea_sources_public.parquet")'
+        run: Rscript -e 'd <- data.frame(file = readLines("idea_sources_public.tab")); arrow::write_parquet(d, "idea_sources_public.parquet")'
 
       - name: cleanup
         run: rm idea_sources_public.tab
