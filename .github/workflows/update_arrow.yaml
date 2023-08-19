@@ -1,0 +1,47 @@
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+     - cron: '0 */12 * * *'
+
+name: refresh-data
+
+jobs:
+  refresh-data:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+      R_KEEP_PKG_SOURCE: yes
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+
+      - uses: r-lib/actions/setup-pandoc@v2
+
+      - name: install pak
+        run: Rscript -e 'install.packages("pak")'
+
+      - name: install arrow
+        run: Rscript -e 'pak::pak("arrow")'
+
+      - name: unzip the tab
+        run: unzip idea_sources_public.tab.zip
+        
+      - name: run data getter
+        run: Rscript -e 'd <- data.frame(file = readLines("idea_sources_public.tab")); arrow::write_parquet(d, "idea_sources_public.parquet")'
+
+      - name: cleanup
+        run: rm idea_sources_public.tab
+        
+      - name: Commit
+        run: |
+          git config --global user.name 'Michael Sumner'
+          git config --global user.email 'mdsumner@gmail.com'
+          git add .
+          git commit -m 'refreshing data' || echo "No changes to commit"
+          git push || echo "No changes to commit"
